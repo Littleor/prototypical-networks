@@ -1,14 +1,12 @@
 import os
 import json
 from functools import partial
-from tqdm import tqdm
 
 import numpy as np
 
 import torch
 import torch.optim as optim
-import torch.optim.lr_scheduler as lr_scheduler 
-import torchvision
+import torch.optim.lr_scheduler as lr_scheduler
 import torchnet as tnt
 
 from protonets.engine import Engine
@@ -17,21 +15,24 @@ import protonets.utils.data as data_utils
 import protonets.utils.model as model_utils
 import protonets.utils.log as log_utils
 
+
 def main(opt):
+    # log目录不存在就创建
     if not os.path.isdir(opt['log.exp_dir']):
         os.makedirs(opt['log.exp_dir'])
 
-    # save opts
+    # 把参数保存到opt.json中
     with open(os.path.join(opt['log.exp_dir'], 'opt.json'), 'w') as f:
         json.dump(opt, f)
         f.write('\n')
-
+    # 追踪每轮训练中的情况
     trace_file = os.path.join(opt['log.exp_dir'], 'trace.txt')
 
     # Postprocess arguments
     opt['model.x_dim'] = list(map(int, opt['model.x_dim'].split(',')))
     opt['log.fields'] = opt['log.fields'].split(',')
 
+    # 初始化种子 保证网络初始值一致
     torch.manual_seed(1234)
     if opt['data.cuda']:
         torch.cuda.manual_seed(1234)
@@ -52,15 +53,16 @@ def main(opt):
 
     engine = Engine()
 
-    meters = { 'train': { field: tnt.meter.AverageValueMeter() for field in opt['log.fields'] } }
+    meters = {'train': {field: tnt.meter.AverageValueMeter() for field in opt['log.fields']}}
 
     if val_loader is not None:
-        meters['val'] = { field: tnt.meter.AverageValueMeter() for field in opt['log.fields'] }
+        meters['val'] = {field: tnt.meter.AverageValueMeter() for field in opt['log.fields']}
 
     def on_start(state):
         if os.path.isfile(trace_file):
             os.remove(trace_file)
         state['scheduler'] = lr_scheduler.StepLR(state['optimizer'], opt['train.decay_every'], gamma=0.5)
+
     engine.hooks['on_start'] = on_start
 
     def on_start_epoch(state):
@@ -68,11 +70,13 @@ def main(opt):
             for field, meter in split_meters.items():
                 meter.reset()
         state['scheduler'].step()
+
     engine.hooks['on_start_epoch'] = on_start_epoch
 
     def on_update(state):
         for field, meter in meters['train'].items():
             meter.add(state['output'][field])
+
     engine.hooks['on_update'] = on_update
 
     def on_end_epoch(hook_state, state):
@@ -118,13 +122,13 @@ def main(opt):
             if opt['data.cuda']:
                 state['model'].cuda()
 
-    engine.hooks['on_end_epoch'] = partial(on_end_epoch, { })
+    engine.hooks['on_end_epoch'] = partial(on_end_epoch, {})
 
     engine.train(
-        model = model,
-        loader = train_loader,
-        optim_method = getattr(optim, opt['train.optim_method']),
-        optim_config = { 'lr': opt['train.learning_rate'],
-                         'weight_decay': opt['train.weight_decay'] },
-        max_epoch = opt['train.epochs']
+        model=model,
+        loader=train_loader,
+        optim_method=getattr(optim, opt['train.optim_method']),
+        optim_config={'lr': opt['train.learning_rate'],
+                      'weight_decay': opt['train.weight_decay']},
+        max_epoch=opt['train.epochs']
     )
