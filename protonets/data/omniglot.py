@@ -1,19 +1,13 @@
-import os
-import sys
 import glob
-
+import os
 from functools import partial
 
 import numpy as np
-from PIL import Image
-
 import torch
-from torchvision.transforms import ToTensor
-
+from PIL import Image
 from torchnet.dataset import ListDataset, TransformDataset
 from torchnet.transform import compose
 
-import protonets
 from protonets.data.base import convert_dict, CudaTransform, EpisodicBatchSampler, SequentialBatchSampler
 
 OMNIGLOT_DATA_DIR = os.path.join(os.path.dirname(__file__), '../../data/omniglot')
