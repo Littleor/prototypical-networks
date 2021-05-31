@@ -1,11 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torch.autograd import Variable
 
 from protonets.models import register_model
-
 from .utils import euclidean_dist
 
 
@@ -17,12 +15,14 @@ class Flatten(nn.Module):
         return x.view(x.size(0), -1)
 
 
+# 这里是全文核心 网络架构都在这里了
 class Protonet(nn.Module):
     def __init__(self, encoder):
         super(Protonet, self).__init__()
 
         self.encoder = encoder
 
+    # 计算错误率
     def loss(self, sample):
         xs = Variable(sample['xs'])  # support
         xq = Variable(sample['xq'])  # query
@@ -64,6 +64,7 @@ class Protonet(nn.Module):
 
 @register_model('protonet_conv')
 def load_protonet_conv(**kwargs):
+    # 加载模型 返回加载对应参数的模型
     x_dim = kwargs['x_dim']
     hid_dim = kwargs['hid_dim']
     z_dim = kwargs['z_dim']
@@ -71,9 +72,9 @@ def load_protonet_conv(**kwargs):
     def conv_block(in_channels, out_channels):
         return nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 3, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
+            nn.BatchNorm2d(out_channels),  # 数据归一 使数据在进行Relu之前不会因为数据过大而导致网络性能的不稳定
+            nn.ReLU(),  # 激活函数
+            nn.MaxPool2d(2)  # 池化
         )
 
     encoder = nn.Sequential(
@@ -82,6 +83,6 @@ def load_protonet_conv(**kwargs):
         conv_block(hid_dim, hid_dim),
         conv_block(hid_dim, z_dim),
         Flatten()
-    )
-
+    )  # 通过Sequential把前向传输过程给省略了
+    # encoder在这里就是这个网络的结构 它用了非一般写法来适应动态参数问题 可以改写成一般写法
     return Protonet(encoder)

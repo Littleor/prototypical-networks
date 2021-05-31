@@ -83,31 +83,44 @@ def extract_episode(n_support, n_query, d):
     }
 
 
+# 加载omniglot数据集
+# opt: 配置参数
+# splits: 需要的数据如 'train', 'val', 'trainval'
 def load(opt, splits):
+    # 拼接路径：data/omniglot/splits/vinyals
     split_dir = os.path.join(OMNIGLOT_DATA_DIR, 'splits', opt['data.split'])
 
     ret = {}
     for split in splits:
+        # test_way: C-Way K-Shot问题中有多少种分类
         if split in ['val', 'test'] and opt['data.test_way'] != 0:
             n_way = opt['data.test_way']
         else:
+            # 默认训练时候每轮60类
             n_way = opt['data.way']
 
+        # 同理每类种多少个数据
         if split in ['val', 'test'] and opt['data.test_shot'] != 0:
             n_support = opt['data.test_shot']
         else:
             n_support = opt['data.shot']
 
+        # 每轮Query Set多少个
         if split in ['val', 'test'] and opt['data.test_query'] != 0:
             n_query = opt['data.test_query']
         else:
             n_query = opt['data.query']
 
+        # 一个epoch有多少个episodes
         if split in ['val', 'test']:
             n_episodes = opt['data.test_episodes']
         else:
             n_episodes = opt['data.train_episodes']
 
+        # partial: 偏函数 用来扩展函数，避免每次都输入同一个参数
+        # 如 partial(convert_dict, 'class')，即是声明了一个新函数：
+        # def new_func(arg):
+        #   return convert_dict('class', arg)
         transforms = [partial(convert_dict, 'class'),
                       load_class_images,
                       partial(extract_episode, n_support, n_query)]

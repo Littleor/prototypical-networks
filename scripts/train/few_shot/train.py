@@ -1,19 +1,17 @@
-import os
 import json
+import os
 from functools import partial
 
 import numpy as np
-
 import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torchnet as tnt
 
-from protonets.engine import Engine
-
 import protonets.utils.data as data_utils
-import protonets.utils.model as model_utils
 import protonets.utils.log as log_utils
+import protonets.utils.model as model_utils
+from protonets.engine import Engine
 
 
 def main(opt):
@@ -34,9 +32,12 @@ def main(opt):
 
     # 初始化种子 保证网络初始值一致
     torch.manual_seed(1234)
+
+    # 显卡训练
     if opt['data.cuda']:
         torch.cuda.manual_seed(1234)
 
+    # 是否运行在训练和验证模式
     if opt['data.trainval']:
         data = data_utils.load(opt, ['trainval'])
         train_loader = data['trainval']
@@ -46,6 +47,7 @@ def main(opt):
         train_loader = data['train']
         val_loader = data['val']
 
+    # 加载模型
     model = model_utils.load(opt)
 
     if opt['data.cuda']:

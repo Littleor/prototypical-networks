@@ -1,9 +1,10 @@
 MODEL_REGISTRY = {}
 
 
+# 一个装饰器 用于注册model
 def register_model(model_name):
     def decorator(f):
-        MODEL_REGISTRY[model_name] = f
+        MODEL_REGISTRY[model_name] = f  # 将module对应的函数保存到MODEL_REGISTRY中
         return f
 
     return decorator

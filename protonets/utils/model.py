@@ -4,6 +4,7 @@ from protonets.models import get_model
 from protonets.utils import filter_opt
 
 
+# 加载模型 从MODEL_REGISTRY拿模型
 def load(opt):
     model_opt = filter_opt(opt, 'model')
     model_name = model_opt['model_name']

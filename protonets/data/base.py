@@ -1,6 +1,7 @@
 import torch
 
 
+# 将k v转为字典
 def convert_dict(k, v):
     return {k: v}
 
