@@ -37,7 +37,7 @@ def main(opt):
     if opt['data.cuda']:
         torch.cuda.manual_seed(1234)
 
-    # 是否运行在训练和验证模式
+    # 根据需求加载数据集
     if opt['data.trainval']:
         data = data_utils.load(opt, ['trainval'])
         train_loader = data['trainval']
@@ -53,6 +53,7 @@ def main(opt):
     if opt['data.cuda']:
         model.cuda()
 
+    # tnt.Engine -> 方便训练和评估模型
     engine = Engine()
 
     meters = {'train': {field: tnt.meter.AverageValueMeter() for field in opt['log.fields']}}

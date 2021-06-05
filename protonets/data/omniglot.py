@@ -36,23 +36,28 @@ def scale_image(key, height, width, d):
 
 
 def load_class_images(d):
+    # 加载图片
     if d['class'] not in OMNIGLOT_CACHE:
+        # d: {'class': 'Japanese_(katakana)/character42/rot000'}
         alphabet, character, rot = d['class'].split('/')
+        # Japanese_(katakana) character42 rot000
         image_dir = os.path.join(OMNIGLOT_DATA_DIR, 'data', alphabet, character)
-
+        # glob模块用来查找目录下面的所有png图片文件
         class_images = sorted(glob.glob(os.path.join(image_dir, '*.png')))
+
         if len(class_images) == 0:
             raise Exception(
                 "No images found for omniglot class {} at {}. Did you run download_omniglot.sh first?".format(
                     d['class'], image_dir))
 
+        # 得到变换后的数据集 -> 对原数据进行处理
         image_ds = TransformDataset(ListDataset(class_images),
                                     compose([partial(convert_dict, 'file_name'),
                                              partial(load_image_path, 'file_name', 'data'),
                                              partial(rotate_image, 'data', float(rot[3:])),
                                              partial(scale_image, 'data', 28, 28),
                                              partial(convert_tensor, 'data')]))
-
+        # 加载数据
         loader = torch.utils.data.DataLoader(image_ds, batch_size=len(image_ds), shuffle=False)
 
         for sample in loader:
