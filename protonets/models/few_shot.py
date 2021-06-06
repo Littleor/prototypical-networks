@@ -19,7 +19,6 @@ class Flatten(nn.Module):
 class Protonet(nn.Module):
     def __init__(self, encoder):
         super(Protonet, self).__init__()
-
         self.encoder = encoder
 
     # 计算错误率
